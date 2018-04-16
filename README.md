@@ -1,6 +1,7 @@
 # blueseis_sandbox
 
 Version from Apr. 16. 2018
+by Felix Bernauer
 
 ################################################################
 
