@@ -14,13 +14,13 @@ command to execute process_ramp.py:
 #################################################################
  
 The script "process_blueseis.py" can be used to process BlueSeis data recorded after Feb. 20. 2018.
-It processes three channel.
+It processes three channels.
 First, the traces are rotated using the rotation matrix file.
 Second, the deramping is done for every single trace.
 Third, the traces are rotated back.
  
 command to execute process_blueseis.py:
-./process_blueseis.py -F test_data/test_HJ1.mseed test_data/test_HJ2.mseed test_data/test_HJ3.mseed -R test_data/test_YR1.mseed test_dat    a/test_YR2.mseed test_data/test_YR3.mseed -O test_data/deramped/ -l 7500 -o 0 -m 10 -M test_data/rotation_matrix.txt
+./process_blueseis.py -F test_data/test_HJ1.mseed test_data/test_HJ2.mseed test_data/test_HJ3.mseed -R test_data/test_YR1.mseed test_data/test_YR2.mseed test_data/test_YR3.mseed -O test_data/deramped/ -l 7500 -o 0 -m 10 -M test_data/rotation_matrix.txt
 
 ##################################################################
  
@@ -28,8 +28,8 @@ The directory "notebooks" contains a Jupyter notebook that demonstrates how the 
  
 ##################################################################
  
-The directory "test_data" contains data examples (Fog-data and ramp-data) that is needed to run the scripts and the notebook, as well as     a rotation matrix file.
+The directory "test_data" contains data examples (Fog-data and ramp-data) that is needed to run the scripts and the notebook, as well as a rotation matrix file.
  
 ##################################################################
  
-The directory "plots" contains plots demonstrating the output of "process_blueseis.py". The plots can be reproduced running the script "    plot_data.py".
+The directory "plots" contains plots demonstrating the output of "process_blueseis.py". The plots can be reproduced running the script " plot_data.py".
