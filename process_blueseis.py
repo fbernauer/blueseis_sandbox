@@ -22,13 +22,33 @@ import argparse
 from obspy.core import read, Stream, Trace, UTCDateTime
 from blueseis_utils import rotate, deramp
 
+
+def check_time_uvw(st_rot_u, st_rot_v, st_rot_w, st_ramp_u, st_ramp_v, st_ramp_w):
+    for i in range(len(st_rot_u)):
+        if st_rot_u[i].stats.starttime != st_rot_v[i].stats.starttime\
+        or st_rot_u[i].stats.starttime != st_rot_w[i].stats.starttime\
+        or st_rot_w[i].stats.starttime != st_rot_v[i].stats.starttime\
+        or st_rot_u[i].stats.endtime != st_rot_v[i].stats.endtime\
+        or st_rot_u[i].stats.endtime != st_rot_w[i].stats.endtime\
+        or st_rot_w[i].stats.endtime != st_rot_v[i].stats.endtime:
+
+            print "Warning: Traces do not have the same start or end time. Traces will be trimmed!"
+            t0 = max(st_rot_u[i].stats.starttime, st_rot_v[i].stats.starttime, st_rot_w[i].stats.starttime)
+            t1 = min(st_rot_u[i].stats.endtime, st_rot_v[i].stats.endtime, st_rot_w[i].stats.endtime)
+            st_rot_u[i].trim(t0, t1)
+            st_rot_v[i].trim(t0, t1)
+            st_rot_w[i].trim(t0, t1)
+
 def check_traces(tr_rot, tr_ramp, i, n_samp):
     tr = Trace(header=tr_rot.stats)
 
 # check start times and channels
-    if tr_rot.stats.starttime != tr_ramp.stats.starttime:
-        print "ERROR: Rotation rate and ramp data for trace "+str(i)+" of channel "+tr_rot.stats.channel+" do not have same start time!"
-        sys.exit(1)
+    if tr_rot.stats.starttime != tr_ramp.stats.starttime or tr_rot.stats.endtime != tr_ramp.stats.endtime:
+        t1 = max(tr_rot.stats.starttime, tr_ramp.stats.starttime)
+        t2 = min(tr_rot.stats.endtime, tr_ramp.stats.endtime)
+        print "Warning: Rotation rate and ramp data for trace "+str(i)+" of channel "+tr_rot.stats.channel+" do not have same time stamps!"
+        tr_rot.trim(t1, t2)
+        tr_ramp.trim(t1, t2)
     if tr_rot.stats.channel[-1] != tr_ramp.stats.channel[-1]:
         print "ERROR: Rotation rate and ramp data for trace "+str(i)+" do not have same channel id"
         sys.exit(1)
@@ -110,10 +130,11 @@ def process_data(infnames_rot, infnames_ramp, out_folder, n_samp, overwrite, nav
 # read rotation matrix file
     M = np.transpose(np.loadtxt(matrix_file, skiprows=1))
 
+# check start and end times of u, v, w:
+    check_time_uvw(st_rot_u, st_rot_v, st_rot_w, st_ramp_u, st_ramp_v, st_ramp_w)
+
+
 # loop over traces
-    print st_ramp_u
-    print st_ramp_v
-    print st_ramp_w
     
     for i in range(len(st_rot_u)):
         GoOn = True
@@ -121,6 +142,12 @@ def process_data(infnames_rot, infnames_ramp, out_folder, n_samp, overwrite, nav
         tr_u, start_u, stop_u, n_max_u = check_traces(st_rot_u[i], st_ramp_u[i], i, n_samp)
         tr_v, start_v, stop_v, n_max_v = check_traces(st_rot_v[i], st_ramp_v[i], i, n_samp)
         tr_w, start_w, stop_w, n_max_w = check_traces(st_rot_w[i], st_ramp_w[i], i, n_samp)
+        print st_rot_u[i]
+        print st_ramp_u[i]
+        print st_rot_v[i]
+        print st_ramp_v[i]
+        print st_rot_w[i]
+        print st_ramp_w[i]
 
         print ''
         print 'processing trace '+str(i+1)+' of '+str(len(st_rot_u))
