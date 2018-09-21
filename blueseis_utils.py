@@ -14,9 +14,9 @@ def rotate(u, v, w, M, inverse):
     M_inv = np.linalg.inv(M)
 
     # do the transformation
-    if not inverse:
+    if inverse:
         x, y, z = np.dot(M_inv, [u, v, w])
-    else:
+    if not inverse:
         x, y, z = np.dot(M, [u, v, w])
 
 
