@@ -128,7 +128,8 @@ def process_data(infnames_rot, infnames_ramp, out_folder, n_samp, overwrite, nav
     st_ramp_w = st_ramp.select(channel='YR3')
 
 # read rotation matrix file
-    M = np.transpose(np.loadtxt(matrix_file, skiprows=1))
+    #M = np.transpose(np.loadtxt(matrix_file, skiprows=1))
+    M = np.loadtxt(matrix_file, skiprows=1)
 
 # check start and end times of u, v, w:
     check_time_uvw(st_rot_u, st_rot_v, st_rot_w, st_ramp_u, st_ramp_v, st_ramp_w)
