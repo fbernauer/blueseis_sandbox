@@ -154,15 +154,15 @@ def process_data(infnames_rot, infnames_ramp, out_folder, n_samp, overwrite, nav
         tr_u, start_u, stop_u, n_max_u = check_traces(st_rot_u[i], st_ramp_u[i], i, n_samp)
         tr_v, start_v, stop_v, n_max_v = check_traces(st_rot_v[i], st_ramp_v[i], i, n_samp)
         tr_w, start_w, stop_w, n_max_w = check_traces(st_rot_w[i], st_ramp_w[i], i, n_samp)
-        print st_rot_u[i]
-        print st_ramp_u[i]
-        print st_rot_v[i]
-        print st_ramp_v[i]
-        print st_rot_w[i]
-        print st_ramp_w[i]
+        print (st_rot_u[i])
+        print (st_ramp_u[i])
+        print (st_rot_v[i])
+        print (st_ramp_v[i])
+        print (st_rot_w[i])
+        print (st_ramp_w[i])
 
-        print ''
-        print 'processing trace '+str(i+1)+' of '+str(len(st_rot_u))
+        print ('')
+        print ('processing trace '+str(i+1)+' of '+str(len(st_rot_u)))
         while GoOn:
 # get data
             sys.stdout.write('U: start: %10i | stop: %10i | total %15i\r\n' %(start_u, stop_u, n_max_u))                
