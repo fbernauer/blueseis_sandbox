@@ -74,14 +74,25 @@ int compare(const void *a, const void *b) {
     return 0;
 }
 
-// function to calculate mean
-double calc_mean(int m, double a[]) {
-    double sum=0;
-    int i;
-    for(i=0; i<m; i++)
-        sum+=a[i];
-    return((double)sum/m);
-    }
+// function to calculate mode
+long calc_mode(int n, double a[]) {
+    double maxValue = 0;
+    int maxCount = 0, i, j;
+    for (i = 0; i < n; ++i) {
+        int count = 0;
+              
+        for (j = 0; j < n; ++j) {
+            if (a[j] == a[i])
+                ++count;
+            }
+                                          
+        if (count > maxCount) {
+            maxCount = count;
+            maxValue = a[i];
+            }
+        }
+   return maxValue;
+}
 
 // compute the average over all second row elements with same first row element
 int sorted_avg(double matr[][2], double matr_sorted[][2], int N) {
@@ -101,10 +112,33 @@ int sorted_avg(double matr[][2], double matr_sorted[][2], int N) {
 	        for (k = i0; k <= i1; k++){
                 arr[k-i0] = matr[k][1];    
                 }
-			matr_sorted[j][1] = calc_mean(l, arr);
+			matr_sorted[j][1] = calc_mode(l, arr);
             free(arr);
             i1 += 1;
             i0 = i1;
+			j += 1;
+		}
+	}
+	return j;
+}
+
+// compute the average over all second row elements with same first row element
+int sorted_avg_old(double matr[][2], double matr_sorted[][2], int N) {
+	int i, j;
+	double a, l;
+	l = 1.;
+	j = 0;
+	a = matr[0][1];
+	for (i = 0; i < N-1; i++){
+		if (matr[i][0] == matr[i+1][0]){
+			l += 1.;
+			a += matr[i+1][1];
+		}
+		if (matr[i][0] != matr[i+1][0]){
+			matr_sorted[j][0] = matr[i][0];
+			matr_sorted[j][1] = a / l;
+			l = 1.;
+			a = matr[i+1][1];
 			j += 1;
 		}
 	}
@@ -124,8 +158,10 @@ int subtract_ramp(double matr[][2], double** matr_sorted, int N, int n){
 	return 0;
 }
 
+
+
 // final deramp function
-int deramp(double matr[][2], double matr_orig[][2], double matr_sorted[][2], double x[1],  int N, int n_avg, double mean[1]){
+int deramp_mode(double matr[][2], double matr_orig[][2], double matr_sorted[][2], double x[1], int N, int n_avg, double mean[1]){
 	int n, i, j;
     double* arr;
     double** matr_sorted_short;
@@ -134,9 +170,8 @@ int deramp(double matr[][2], double matr_orig[][2], double matr_sorted[][2], dou
     // calculate overall mean value
 	for (i = 0; i < N; i++){
         arr[i] = matr[i][1];
-
     }
-    mean[0] = calc_mean(N, arr);
+    mean[0] = calc_mode(N, arr);
 
     qsort(matr, N, sizeof(*matr), compare);
  	n = sorted_avg(matr, matr_sorted, N);
@@ -163,39 +198,6 @@ int deramp(double matr[][2], double matr_orig[][2], double matr_sorted[][2], dou
 	}
 	subtract_ramp(matr_orig, matr_sorted_short, N, n);
 
-
 	return n;
 }
 
-/* 
-int main(void) {
-    double matrix[][2] = {{8,6}, {4,2}, {1,0}, {4,8}, {2,4},
-                       {4,3}, {1,2}, {2,2}, {8,3}, {5,5}};
-    double matrix_orig[][2] = {{8,6}, {4,2}, {1,0}, {4,8}, {2,4},
-                       {4,3}, {1,2}, {2,2}, {8,3}, {5,5}};
-	int N;
-    //double mean;
-	size_t i;
- 
-	N = ARRSIZE(matrix);
-	double m[N][2];
-
-    printf("Original: ");
-    for (i = 0; i < ARRSIZE(matrix_orig); i++)
-        printf("(%f,%f) ", matrix_orig[i][0], matrix_orig[i][1]);
-    putchar('\n');
- 
-	struct Tuple *t = deramp(matrix, matrix_orig, m, N, 3);
-
-    printf("Sorted  : ");
-    for (i = 0; i < ARRSIZE(matrix); i++)
-        printf("(%f,%f) ", matrix[i][0], matrix[i][1]);
-    putchar('\n');
-    printf("deramped: ");
-    for (i = 0; i < ARRSIZE(matrix); i++)
-        printf("(%f,%f) ", matrix_orig[i][0], matrix_orig[i][1]);
-    putchar('\n');
- 
-    return 0;
-}
-*/
