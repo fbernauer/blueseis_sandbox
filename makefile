@@ -1,6 +1,6 @@
 # Makefile for deramp
 # for shared library only
-# for compiling the executable, replace line 20 with
+# for compiling the executable, replace line 29 with
 
 # all: ${TARGET_LIB} ${TARGET}
 
@@ -8,11 +8,24 @@ CC = gcc # C compiler
 CFLAGS = -fPIC -Wall -Wextra -O2 -g # C flags
 LDFLAGS = -shared  # linking flags
 RM = rm -f  # rm command
-TARGET_LIB = deramp.so # target lib
 
-SRCS = deramp.c # source files
+# for deramping with mean:
+#TARGET_LIB = deramp.so # target lib
+#SRCS = deramp.c # source files
+#OBJS = $(SRCS:.c=.o)
+#TARGET = deramp
+
+# for deramping with median:
+#TARGET_LIB = deramp_median.so # target lib
+#SRCS = deramp_median.c # source files
+#OBJS = $(SRCS:.c=.o)
+#TARGET = deramp_median
+
+# for deramping with mode:
+TARGET_LIB = deramp_mode.so # target lib
+SRCS = deramp_mode.c # source files
 OBJS = $(SRCS:.c=.o)
-TARGET = deramp
+TARGET = deramp_mode
 
 
 

@@ -1,15 +1,5 @@
 #! /usr/bin/env python
 """
-This script takes exactly three rotation rate files and the corresponding three ramp files as input. 
-It rotates the three rotation rate traces into the original blueseis system (by using the required rotation matrix),
-deramps the traces useing the ramp traces,
-and rotates the three rotation rate traces back.
-
-The script can handle day-files (or shorter) in miniseed format.
-
-The output files will be named after miniseed convention: NN.SSSSS.LL.CCC.D.YYYY.DDD.pro (note the suffix .pro!)
-
-The input rotation rate and ramp files have to cantain the same time spans.
 
 """
 
@@ -20,7 +10,29 @@ import numpy.ctypeslib as npct
 import argparse
 
 from obspy.core import read, Stream, Trace, UTCDateTime
-from blueseis_utils import rotate, deramp
+from blueseis_utils import rotate, deramp, deramp_median, deramp_mode, plot_deramp
+
+#"""
+#The script can handle day-files (or shorter) in miniseed format.
+#
+#The output files will be named after miniseed convention: NN.SSSSS.LL.CCC.D.YYYY.DDD.pro (note the suffix .pro!)
+#
+#The input rotation rate and ramp files have to contain the same time spans.
+#
+#"""
+
+######################################################################################################################
+# This script takes exactly three rotation rate files and the corresponding three ramp files as input. 
+# It rotates the three rotation rate traces into the original blueseis system (by using the required rotation matrix),
+# deramps the traces using the ramp traces,
+# and rotates the three rotation rate traces back.
+#
+# The script can handle day-files (or shorter) in miniseed format.
+#
+# The output files will be named after miniseed convention: NN.SSSSS.LL.CCC.D.YYYY.DDD.pro (note the suffix .pro!)
+#
+# The input rotation rate and ramp files have to contain the same time spans.
+#######################################################################################################################
 
 
 def check_time_uvw(st_rot_u, st_rot_v, st_rot_w, st_ramp_u, st_ramp_v, st_ramp_w):
@@ -64,7 +76,7 @@ def check_traces(tr_rot, tr_ramp, i, n_samp):
         stop = n_max
     return tr, start, stop, n_max
 
-def create_outfile(st_in, out_folder):
+def create_outfile(st_in, out_folder, method, suff):
     net = st_in[0].stats.network
     sta = st_in[0].stats.station
     loc = st_in[0].stats.location
@@ -72,7 +84,7 @@ def create_outfile(st_in, out_folder):
     dq = 'D'
     yyyy = str(st_in[0].stats.starttime.year)
     ddd = str(st_in[0].stats.starttime.julday).zfill(3)
-    fname = net+'.'+sta+'.'+loc+'.'+cha+'.'+dq+'.'+yyyy+'.'+ddd+'.pro'
+    fname = net+'.'+sta+'.'+loc+'.'+cha+'.'+dq+'.'+yyyy+'.'+ddd+'.pro_'+method+'.'+suff
     outfname = out_folder+fname
     return open(outfname, 'wb')
 
@@ -86,7 +98,7 @@ def get_samples(tr1, tr2, start, stop):
     return data1, data2, GoOn
 
 
-def process_data(infnames_rot, infnames_ramp, out_folder, n_samp, overwrite, navg, matrix_file):
+def process_data(infnames_rot, infnames_ramp, out_folder, n_samp, overwrite, navg, matrix_file, method, suff, plot_flagg):
 # check if output directory exists. If not, create it.
     if not out_folder.endswith('/'):
         out_folder = out_folder+'/'
@@ -118,17 +130,16 @@ def process_data(infnames_rot, infnames_ramp, out_folder, n_samp, overwrite, nav
         st_ramp += read(infname_ramp)
 
     st_rot_u = st_rot.select(channel='HJ1')
-    out_file_u = create_outfile(st_rot_u, out_folder)
+    out_file_u = create_outfile(st_rot_u, out_folder, method, suff)
     st_rot_v = st_rot.select(channel='HJ2')
-    out_file_v = create_outfile(st_rot_v, out_folder)
+    out_file_v = create_outfile(st_rot_v, out_folder, method, suff)
     st_rot_w = st_rot.select(channel='HJ3')
-    out_file_w = create_outfile(st_rot_w, out_folder)
+    out_file_w = create_outfile(st_rot_w, out_folder, method, suff)
     st_ramp_u = st_ramp.select(channel='YR1')
     st_ramp_v = st_ramp.select(channel='YR2')
     st_ramp_w = st_ramp.select(channel='YR3')
 
 # read rotation matrix file
-    #M = np.transpose(np.loadtxt(matrix_file, skiprows=1))
     M = np.loadtxt(matrix_file, skiprows=1)
 
 # check start and end times of u, v, w:
@@ -185,12 +196,19 @@ def process_data(infnames_rot, infnames_ramp, out_folder, n_samp, overwrite, nav
             ramp = [ru, rv, rw]
             
             sys.stdout.write('deramping ...\r\n')
-            f_corr = deramp(fog, ramp, navg)
+            if method == 'mean':
+                f_corr, x, ramp_sort, fog_sort, mean = deramp(fog, ramp, navg, plot_flagg)
+            if method == 'median':
+                f_corr, x, ramp_sort, fog_sort, mean = deramp_median(fog, ramp, navg, plot_flagg)
+            if method == 'mode':
+                f_corr, x, ramp_sort, fog_sort, mean = deramp_mode(fog, ramp, navg, plot_flagg)
 
             sys.stdout.write('rotating back again ...\r\n')
             fu_corr, fv_corr, fw_corr = rotate(f_corr[0], f_corr[1], f_corr[2], M, False)
 #######################################################
-
+            if plot_flagg:
+                plot_deramp(fog, ramp, f_corr, x, ramp_sort, fog_sort, mean)
+    
             tr_u.data = np.append(tr_u.data, fu_corr)
             tr_v.data = np.append(tr_v.data, fv_corr)
             tr_w.data = np.append(tr_w.data, fw_corr)
@@ -211,8 +229,8 @@ def process_data(infnames_rot, infnames_ramp, out_folder, n_samp, overwrite, nav
     out_file_u.flush()
     out_file_u.close()
     out_file_v.flush()
-    out_file_v.flush()
-    out_file_w.close()
+    out_file_v.close()
+    out_file_w.flush()
     out_file_w.close()
 
 
@@ -222,7 +240,7 @@ def process_data(infnames_rot, infnames_ramp, out_folder, n_samp, overwrite, nav
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__, prog='process_blueseis.py')
+    parser = argparse.ArgumentParser(description=__doc__, prog='process_bs.py')
     
     parser.add_argument('-F', metavar='', type=str, nargs=3, required=True,
                         default='', dest='fogfiles', help='three files containing raw rotation rates, in minseed')
@@ -233,11 +251,17 @@ def main():
     parser.add_argument('-l', metavar='', type=int,
                         default=75000, dest='nsamp', help='[int] length of window to be processed, in samples')
     parser.add_argument('-o', metavar='', type=int,
-                        default=0, dest='ow', help='[0 or 1] 0: existing output file will not be over written, 1: existing output fill will be over written')
+                        default=0, dest='ow', help='[0 or 1]: existing output file will be over written or not')
     parser.add_argument('-m', metavar='', type=int,
                         default=100, dest='navg', help='[int] length of moving average window, in samples')
     parser.add_argument('-M', metavar='', type=str, required=True,
                         default='', dest='matrixfile', help='file containing BlueSeis rotation matrix')
+    parser.add_argument('-a', metavar='', type=str, required=True,
+                        default='', dest='method', help='specify method: "mean", "median" or "mode"')
+    parser.add_argument('-s', metavar='', type=str, required=False,
+                        default='', dest='suff', help='specify any suffix to the out put file name.')
+    parser.add_argument('-p', metavar='', type=int, required=False,
+                        default=0, dest='plot', help='[0 or 1]: results will be plotted or not.')
     
     args = parser.parse_args()
 
@@ -248,8 +272,11 @@ def main():
     ow = args.ow
     n_avg = args.navg
     matrix_file = args.matrixfile
+    method = args.method
+    suff = args.suff
+    plot_flagg = args.plot
 
-    process_data(rotfnames, rampfnames, out_folder, n_samp, ow, n_avg, matrix_file)
+    process_data(rotfnames, rampfnames, out_folder, n_samp, ow, n_avg, matrix_file, method, suff, plot_flagg)
 
 if __name__ == "__main__":
     main()

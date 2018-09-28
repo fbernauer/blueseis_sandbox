@@ -65,6 +65,7 @@ int nx2;
 
 
 
+
 // this is the compare function for qsort 
 int compare(const void *a, const void *b) {
     double x1 = *(const double*)a;
@@ -74,14 +75,31 @@ int compare(const void *a, const void *b) {
     return 0;
 }
 
-// function to calculate mean
-double calc_mean(int m, double a[]) {
-    double sum=0;
-    int i;
-    for(i=0; i<m; i++)
-        sum+=a[i];
-    return((double)sum/m);
-    }
+// calculate the median
+double calc_median(int n, double x[]) {
+    double temp;
+    int i, j;
+// the following two loops sort the array x in ascending order
+    for(i=0; i<n-1; i++) {
+        for(j=i+1; j<n; j++) {
+            if(x[j] < x[i]) {
+// swap elements
+                temp = x[i];
+                x[i] = x[j];
+                x[j] = temp;
+                }
+            }
+        }
+
+    if(n%2==0) {
+// if there is an even number of elements, return mean of the two elements in the middle
+        return((x[n/2] + x[n/2 - 1]) / 2.0);
+        } 
+        else {
+// else return the element in the middle
+            return x[n/2];
+            }
+}
 
 // compute the average over all second row elements with same first row element
 int sorted_avg(double matr[][2], double matr_sorted[][2], int N) {
@@ -101,10 +119,34 @@ int sorted_avg(double matr[][2], double matr_sorted[][2], int N) {
 	        for (k = i0; k <= i1; k++){
                 arr[k-i0] = matr[k][1];    
                 }
-			matr_sorted[j][1] = calc_mean(l, arr);
+			matr_sorted[j][1] = calc_median(l, arr);
             free(arr);
             i1 += 1;
             i0 = i1;
+			j += 1;
+		}
+	}
+	return j;
+}
+
+// compute the average over all second row elements with same first row element
+int sorted_avg_old(double matr[][2], double matr_sorted[][2], int N) {
+	int i, j;
+	double a, l;
+	l = 1.;
+	j = 0;
+	a = matr[0][1];
+	for (i = 0; i < N-1; i++){
+		if (matr[i][0] == matr[i+1][0]){
+			l += 1.;
+			a += matr[i+1][1];
+		}
+		if (matr[i][0] != matr[i+1][0]){
+			matr_sorted[j][0] = matr[i][0];
+			matr_sorted[j][1] = a / l;
+            printf(" (%f) ", matr_sorted[j][1]);
+			l = 1.;
+			a = matr[i+1][1];
 			j += 1;
 		}
 	}
@@ -124,19 +166,20 @@ int subtract_ramp(double matr[][2], double** matr_sorted, int N, int n){
 	return 0;
 }
 
+
+
 // final deramp function
-int deramp(double matr[][2], double matr_orig[][2], double matr_sorted[][2], double x[1],  int N, int n_avg, double mean[1]){
+int deramp_median(double matr[][2], double matr_orig[][2], double matr_sorted[][2], double x[1], int N, int n_avg, double mean[1]){
 	int n, i, j;
     double* arr;
     double** matr_sorted_short;
 
     arr = (double *)malloc((size_t)(N*sizeof(double)));
-    // calculate overall mean value
+    // calculate overall median value
 	for (i = 0; i < N; i++){
         arr[i] = matr[i][1];
-
     }
-    mean[0] = calc_mean(N, arr);
+    mean[0] = calc_median(N, arr);
 
     qsort(matr, N, sizeof(*matr), compare);
  	n = sorted_avg(matr, matr_sorted, N);
@@ -163,39 +206,7 @@ int deramp(double matr[][2], double matr_orig[][2], double matr_sorted[][2], dou
 	}
 	subtract_ramp(matr_orig, matr_sorted_short, N, n);
 
-
 	return n;
 }
 
-/* 
-int main(void) {
-    double matrix[][2] = {{8,6}, {4,2}, {1,0}, {4,8}, {2,4},
-                       {4,3}, {1,2}, {2,2}, {8,3}, {5,5}};
-    double matrix_orig[][2] = {{8,6}, {4,2}, {1,0}, {4,8}, {2,4},
-                       {4,3}, {1,2}, {2,2}, {8,3}, {5,5}};
-	int N;
-    //double mean;
-	size_t i;
  
-	N = ARRSIZE(matrix);
-	double m[N][2];
-
-    printf("Original: ");
-    for (i = 0; i < ARRSIZE(matrix_orig); i++)
-        printf("(%f,%f) ", matrix_orig[i][0], matrix_orig[i][1]);
-    putchar('\n');
- 
-	struct Tuple *t = deramp(matrix, matrix_orig, m, N, 3);
-
-    printf("Sorted  : ");
-    for (i = 0; i < ARRSIZE(matrix); i++)
-        printf("(%f,%f) ", matrix[i][0], matrix[i][1]);
-    putchar('\n');
-    printf("deramped: ");
-    for (i = 0; i < ARRSIZE(matrix); i++)
-        printf("(%f,%f) ", matrix_orig[i][0], matrix_orig[i][1]);
-    putchar('\n');
- 
-    return 0;
-}
-*/
