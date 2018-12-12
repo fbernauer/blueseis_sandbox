@@ -44,7 +44,7 @@ def check_time_uvw(st_rot_u, st_rot_v, st_rot_w, st_ramp_u, st_ramp_v, st_ramp_w
         or st_rot_u[i].stats.endtime != st_rot_w[i].stats.endtime\
         or st_rot_w[i].stats.endtime != st_rot_v[i].stats.endtime:
 
-            print "Warning: Traces do not have the same start or end time. Traces will be trimmed!"
+            print("Warning: Traces do not have the same start or end time. Traces will be trimmed!")
             t0 = max(st_rot_u[i].stats.starttime, st_rot_v[i].stats.starttime, st_rot_w[i].stats.starttime)
             t1 = min(st_rot_u[i].stats.endtime, st_rot_v[i].stats.endtime, st_rot_w[i].stats.endtime)
             st_rot_u[i].trim(t0, t1)
@@ -58,11 +58,11 @@ def check_traces(tr_rot, tr_ramp, i, n_samp):
     if tr_rot.stats.starttime != tr_ramp.stats.starttime or tr_rot.stats.endtime != tr_ramp.stats.endtime:
         t1 = max(tr_rot.stats.starttime, tr_ramp.stats.starttime)
         t2 = min(tr_rot.stats.endtime, tr_ramp.stats.endtime)
-        print "Warning: Rotation rate and ramp data for trace "+str(i)+" of channel "+tr_rot.stats.channel+" do not have same time stamps!"
+        print("Warning: Rotation rate and ramp data for trace "+str(i)+" of channel "+tr_rot.stats.channel+" do not have same time stamps!")
         tr_rot.trim(t1, t2)
         tr_ramp.trim(t1, t2)
     if tr_rot.stats.channel[-1] != tr_ramp.stats.channel[-1]:
-        print "ERROR: Rotation rate and ramp data for trace "+str(i)+" do not have same channel id"
+        print("ERROR: Rotation rate and ramp data for trace "+str(i)+" do not have same channel id")
         sys.exit(1)
 
 # handle traces with different length
@@ -76,7 +76,7 @@ def check_traces(tr_rot, tr_ramp, i, n_samp):
         stop = n_max
     return tr, start, stop, n_max
 
-def create_outfile(st_in, out_folder, method, suff):
+def create_outfile(st_in, out_folder, method, suff, overwrite):
     net = st_in[0].stats.network
     sta = st_in[0].stats.station
     loc = st_in[0].stats.location
@@ -84,8 +84,19 @@ def create_outfile(st_in, out_folder, method, suff):
     dq = 'D'
     yyyy = str(st_in[0].stats.starttime.year)
     ddd = str(st_in[0].stats.starttime.julday).zfill(3)
-    fname = net+'.'+sta+'.'+loc+'.'+cha+'.'+dq+'.'+yyyy+'.'+ddd+'.pro_'+method+'.'+suff
+    if not suff == '':
+        fname = net+'.'+sta+'.'+loc+'.'+cha+'.'+dq+'.'+yyyy+'.'+ddd+'.pro_'+method+'.'+suff
+    else:
+        fname = net+'.'+sta+'.'+loc+'.'+cha+'.'+dq+'.'+yyyy+'.'+ddd+'.pro_'+method
+        
     outfname = out_folder+fname
+    # check if out file exists
+    if os.path.isfile(outfname) and overwrite == 0:
+        print('ERROR: file '+outfname+' already exists!')
+        sys.exit(1)
+    if os.path.isfile(outfname) and overwrite == 1:
+        print('Warning: file '+outfname+' will be overwritten!')
+    #    outfnames.append(outfname)
     return open(outfname, 'wb')
 
 def get_samples(tr1, tr2, start, stop):
@@ -105,20 +116,10 @@ def process_data(infnames_rot, infnames_ramp, out_folder, n_samp, overwrite, nav
     if not os.path.exists(out_folder):
         os.makedirs(out_folder)    
 
-# check if out file exists
-    outfnames = []
-    for infname_rot in infnames_rot:
-        outfname = out_folder+infname_rot.split('/')[-1]+".pro"
-        if os.path.isfile(outfname) and overwrite == 0:
-            print 'ERROR: file '+outfname+' already exists!'
-            sys.exit(1)
-        if os.path.isfile(outfname) and overwrite == 1:
-            print 'Warning: file '+outfname+' will be overwritten!'
-        outfnames.append(outfname)
 
 # check list of input files
     if len(infnames_rot) != 3 and len(infnames_ramp) != 3:
-        print "ERROR: You must process at least three input channels!"
+        print("ERROR: You must process at least three input channels!")
         sys.exit(1)
 
 # read input files
@@ -130,11 +131,11 @@ def process_data(infnames_rot, infnames_ramp, out_folder, n_samp, overwrite, nav
         st_ramp += read(infname_ramp)
 
     st_rot_u = st_rot.select(channel='HJ1')
-    out_file_u = create_outfile(st_rot_u, out_folder, method, suff)
+    out_file_u = create_outfile(st_rot_u, out_folder, method, suff, overwrite)
     st_rot_v = st_rot.select(channel='HJ2')
-    out_file_v = create_outfile(st_rot_v, out_folder, method, suff)
+    out_file_v = create_outfile(st_rot_v, out_folder, method, suff, overwrite)
     st_rot_w = st_rot.select(channel='HJ3')
-    out_file_w = create_outfile(st_rot_w, out_folder, method, suff)
+    out_file_w = create_outfile(st_rot_w, out_folder, method, suff, overwrite)
     st_ramp_u = st_ramp.select(channel='YR1')
     st_ramp_v = st_ramp.select(channel='YR2')
     st_ramp_w = st_ramp.select(channel='YR3')
@@ -154,15 +155,15 @@ def process_data(infnames_rot, infnames_ramp, out_folder, n_samp, overwrite, nav
         tr_u, start_u, stop_u, n_max_u = check_traces(st_rot_u[i], st_ramp_u[i], i, n_samp)
         tr_v, start_v, stop_v, n_max_v = check_traces(st_rot_v[i], st_ramp_v[i], i, n_samp)
         tr_w, start_w, stop_w, n_max_w = check_traces(st_rot_w[i], st_ramp_w[i], i, n_samp)
-        print st_rot_u[i]
-        print st_ramp_u[i]
-        print st_rot_v[i]
-        print st_ramp_v[i]
-        print st_rot_w[i]
-        print st_ramp_w[i]
+        print(st_rot_u[i])
+        print(st_ramp_u[i])
+        print(st_rot_v[i])
+        print(st_ramp_v[i])
+        print(st_rot_w[i])
+        print(st_ramp_w[i])
 
-        print ''
-        print 'processing trace '+str(i+1)+' of '+str(len(st_rot_u))
+        print('')
+        print('processing trace '+str(i+1)+' of '+str(len(st_rot_u)))
         while GoOn:
 # get data
             sys.stdout.write('U: start: %10i | stop: %10i | total %15i\r\n' %(start_u, stop_u, n_max_u))                
@@ -225,7 +226,7 @@ def process_data(infnames_rot, infnames_ramp, out_folder, n_samp, overwrite, nav
         tr_w.write(out_file_w, format='mseed', reclen=512, encoding='FLOAT64')
         out_file_w.flush()
     
-    print ''
+    print('')
     out_file_u.flush()
     out_file_u.close()
     out_file_v.flush()
@@ -250,8 +251,8 @@ def main():
                         default='./', dest='outfolder', help='output directory')
     parser.add_argument('-l', metavar='', type=int,
                         default=75000, dest='nsamp', help='[int] length of window to be processed, in samples')
-    parser.add_argument('-o', metavar='', type=int,
-                        default=0, dest='ow', help='[0 or 1]: existing output file will be over written or not')
+    parser.add_argument('-o', default=False,
+                        action='store_true', dest='ow', help='if "-o" option is set, existing output file will be over written')
     parser.add_argument('-m', metavar='', type=int,
                         default=100, dest='navg', help='[int] length of moving average window, in samples')
     parser.add_argument('-M', metavar='', type=str, required=True,
@@ -269,7 +270,10 @@ def main():
     rampfnames = args.rampfiles
     out_folder = args.outfolder
     n_samp = args.nsamp
-    ow = args.ow
+    if args.ow:
+        ow = 1
+    if not args.ow:
+        ow = 0
     n_avg = args.navg
     matrix_file = args.matrixfile
     method = args.method

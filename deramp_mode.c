@@ -74,6 +74,19 @@ int compare(const void *a, const void *b) {
     return 0;
 }
 
+
+
+// function to calculate mean
+double calc_mean(int m, double a[]) {
+    double sum=0;
+    int i;
+    for(i=0; i<m; i++)
+        sum+=a[i];
+    return((double)sum/m);
+    }
+
+
+
 // function to calculate mode
 long calc_mode(int n, double a[]) {
     double maxValue = 0;
@@ -171,7 +184,7 @@ int deramp_mode(double matr[][2], double matr_orig[][2], double matr_sorted[][2]
 	for (i = 0; i < N; i++){
         arr[i] = matr[i][1];
     }
-    mean[0] = calc_mode(N, arr);
+    mean[0] = calc_mean(N, arr);
 
     qsort(matr, N, sizeof(*matr), compare);
  	n = sorted_avg(matr, matr_sorted, N);

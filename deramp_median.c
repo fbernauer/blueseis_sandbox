@@ -75,6 +75,15 @@ int compare(const void *a, const void *b) {
     return 0;
 }
 
+// function to calculate mean
+double calc_mean(int m, double a[]) {
+    double sum=0;
+    int i;
+    for(i=0; i<m; i++)
+        sum+=a[i];
+    return((double)sum/m);
+    }
+
 // calculate the median
 double calc_median(int n, double x[]) {
     double temp;
@@ -175,11 +184,11 @@ int deramp_median(double matr[][2], double matr_orig[][2], double matr_sorted[][
     double** matr_sorted_short;
 
     arr = (double *)malloc((size_t)(N*sizeof(double)));
-    // calculate overall median value
+    // calculate overall mean value
 	for (i = 0; i < N; i++){
         arr[i] = matr[i][1];
     }
-    mean[0] = calc_median(N, arr);
+    mean[0] = calc_mean(N, arr);
 
     qsort(matr, N, sizeof(*matr), compare);
  	n = sorted_avg(matr, matr_sorted, N);
