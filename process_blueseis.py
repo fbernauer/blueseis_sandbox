@@ -251,8 +251,8 @@ def main():
                         default='./', dest='outfolder', help='output directory')
     parser.add_argument('-l', metavar='', type=int,
                         default=75000, dest='nsamp', help='[int] length of window to be processed, in samples')
-    parser.add_argument('-o', metavar='', type=int,
-                        default=0, dest='ow', help='[0 or 1]: existing output file will be over written or not')
+    parser.add_argument('-o', default=False,
+                        action='store_true', dest='ow', help='if "-o" option is set, existing output file will be over written')
     parser.add_argument('-m', metavar='', type=int,
                         default=100, dest='navg', help='[int] length of moving average window, in samples')
     parser.add_argument('-M', metavar='', type=str, required=True,
@@ -270,7 +270,10 @@ def main():
     rampfnames = args.rampfiles
     out_folder = args.outfolder
     n_samp = args.nsamp
-    ow = args.ow
+    if args.ow:
+        ow = 1
+    if not args.ow:
+        ow = 0
     n_avg = args.navg
     matrix_file = args.matrixfile
     method = args.method

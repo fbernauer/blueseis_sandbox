@@ -110,7 +110,8 @@ def plot_deramp(fog, ramp, fog_corr, x, fog_sort, ramp_sort, _mean):
 
 def deramp(fog, ramp, navg, plot_flagg):
 # bind in the deramp.so library
-    deramplib = ctypes.CDLL('/home/fbernauer/deRamp_test/blueseis_sandbox-master/deramp.so')
+    cwd = os.getcwd()
+    deramplib = ctypes.CDLL(cwd+'/deramp.so')
 
 # define the argument variables   
     array_2d_double = npct.ndpointer(dtype=np.double, ndim=2, flags='CONTIGUOUS')
@@ -160,7 +161,8 @@ def deramp(fog, ramp, navg, plot_flagg):
 
 def deramp_median(fog, ramp, navg, plot_flagg):
 # bind in the deramp.so library
-    deramplib = ctypes.CDLL('/home/fbernauer/deRamp_test/blueseis_sandbox-master/deramp_median.so')
+    cwd = os.getcwd()
+    deramplib = ctypes.CDLL(cwd+'/deramp_median.so')
 
 # define the argument variables   
     array_2d_double = npct.ndpointer(dtype=np.double, ndim=2, flags='CONTIGUOUS')
@@ -209,7 +211,8 @@ def deramp_median(fog, ramp, navg, plot_flagg):
 
 def deramp_mode(fog, ramp, navg, plot_flagg):
 # bind in the deramp.so library
-    deramplib = ctypes.CDLL('/home/fbernauer/deRamp_test/blueseis_sandbox-master/deramp_mode.so')
+    cwd = os.getcwd()
+    deramplib = ctypes.CDLL(cwd+'/deramp_mode.so')
 
 # define the argument variables   
     array_2d_double = npct.ndpointer(dtype=np.double, ndim=2, flags='CONTIGUOUS')
