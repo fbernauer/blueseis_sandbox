@@ -1,16 +1,15 @@
 # blueseis_sandbox
 
-Version from Apr. 16. 2018
+Version from June. 6. 2019
 by Felix Bernauer
 
 ################################################################
 
-The script "process_ramp.py" can be used to deramp BlueSeis data recorded before Feb. 20. 2018.
+The script "process_blueseis1D.py" can be used to deramp BlueSeis data recorded before Feb. 20. 2018.
 It processes a single channel. Day-files (or shorter) in miniseed-format can be processed.
 
-command to execute process_ramp.py:
-./process_ramp.py test_data/FOG.mseed test_data/RAMP.mseed test_data/deramped/ 7500 0 10
- 
+command to execute process_blueseis1D.py:
+./process_blueseis1D.py -F test_data/test_HJ1.mseed -R test_data/test_YR1.mseed -O test_data/deramped/ -l 7500 -o 0 -m 10 
 #################################################################
  
 The script "process_blueseis.py" can be used to process BlueSeis data recorded after Feb. 20. 2018.
